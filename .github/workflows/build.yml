@@ -21,8 +21,9 @@ permissions:
 
 jobs:
   build:
-    name: Build (${{ matrix.system }})
+    name: Build ayugram-desktop (${{ matrix.system }})
     runs-on: ubuntu-22.04
+    timeout-minutes: 300
     strategy:
       fail-fast: false
       matrix:
@@ -42,10 +43,21 @@ jobs:
             trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0ATULk5KPsnPonf3dmAxxEXG5kS54Y=
 
       - name: flake check
-        run: nix --accept-flake-config flake check --no-write-lock-file .#
+        run: nix flake check --no-write-lock-file .#
 
       - name: Build ayugram-desktop
+        id: build
         run: |
-          nix --accept-flake-config build --no-link .#packages.${{ matrix.system }}.ayugram-desktop
-          nix --accept-flake-config store info .#packages.${{ matrix.system }}.ayugram-desktop --json 2>/dev/null | jq -r '.[].outputs.out' || true
-          echo "Build succeeded"
+          nix --print-build-logs build .#packages.${{ matrix.system }}.ayugram-desktop
+          SP=$(readlink result)
+          echo "store_path=$SP" >> $GITHUB_OUTPUT
+          echo "Built: $SP"
+          ls -la "$SP"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ayugram-desktop-linux
+          path: ${{ steps.build.outputs.store_path }}
+          retention-days: 14
+          if-no-files-found: error
