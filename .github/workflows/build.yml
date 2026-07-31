@@ -1,0 +1,51 @@
+name: "Build (Linux/Nix)"
+run-name: "build"
+
+on:
+  push:
+    branches: [rebase-telegram-desktop-7]
+    paths:
+      - '**/*.nix'
+      - '**/*.lock'
+      - '**/*.patch'
+      - '.github/workflows/build.yml'
+  pull_request:
+    paths:
+      - '**/*.nix'
+      - '**/*.lock'
+      - '**/*.patch'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build (${{ matrix.system }})
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        system: [x86_64-linux]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            substituters = https://cache.nixos.org
+            trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0ATULk5KPsnPonf3dmAxxEXG5kS54Y=
+
+      - name: flake check
+        run: nix --accept-flake-config flake check --no-write-lock-file .#
+
+      - name: Build ayugram-desktop
+        run: |
+          nix --accept-flake-config build --no-link .#packages.${{ matrix.system }}.ayugram-desktop
+          nix --accept-flake-config store info .#packages.${{ matrix.system }}.ayugram-desktop --json 2>/dev/null | jq -r '.[].outputs.out' || true
+          echo "Build succeeded"
