@@ -39,7 +39,7 @@ stdenv.mkDerivation (finalAttrs: {
     rev = "1bc9bb3234f6cd36061b2816c6e0d396e4996599";
 
     fetchSubmodules = true;
-    hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
+    hash = "sha256-ulv1DAP93X1hdBGcPLQ+DF7F9ybQyrC/VU1zqhqNTW8=";
   };
 
   nativeBuildInputs = [
