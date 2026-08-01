@@ -58,7 +58,6 @@ stdenv.mkDerivation (finalAttrs: {
     ffmpeg_6
     openal-soft
     minizip-ng
-    minizip-ng.dev
     range-v3
     tl-expected
     rnnoise
@@ -76,9 +75,9 @@ stdenv.mkDerivation (finalAttrs: {
   dontWrapQtApps = true;
   postPatch = ''
     mkdir -p $TMPDIR/pkgconfig
-    cp ${minizip-ng.dev}/lib/pkgconfig/minizip-ng.pc $TMPDIR/pkgconfig/minizip.pc
+    cp ${minizip-ng}/lib/pkgconfig/minizip-ng.pc $TMPDIR/pkgconfig/minizip.pc
   '';
-  preBuild = ''
+  preConfigure = ''
     export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$TMPDIR/pkgconfig
   '';
   cmakeFlags = [
