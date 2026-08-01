@@ -3,7 +3,7 @@ run-name: "build"
 
 on:
   push:
-    branches: [rebase-telegram-desktop-7]
+    branches: [rebase-telegram-desktop-7, test-rebased-7.0.6]
     paths:
       - '**/*.nix'
       - '**/*.lock'
@@ -28,19 +28,12 @@ jobs:
       fail-fast: false
       matrix:
         system: [x86_64-linux]
+    container: nixos/nix:latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Install Nix
-        uses: cachix/install-nix-action@v31
-        with:
-          extra_nix_config: |
-            experimental-features = nix-command flakes
-            substituters = https://cache.nixos.org https://ayugram-desktop.cachix.org https://tg-owt.cachix.org
-            trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0ATULk5KPsnPonf3dmAxxEXG5kS54Y= ayugram-desktop.cachix.org-1:AZ5EqHrJsAKL5YkZYLPEsb1FdD9QlypUwQ0REcJftgA= tg-owt.cachix.org-1:lp0BukIhSK3EIyLcDhDZ5zABgT48nmNp6t4SnZ0wr8w=
 
       - name: flake check
         run: nix flake check --no-write-lock-file --accept-flake-config .#
