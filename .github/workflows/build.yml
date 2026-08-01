@@ -15,6 +15,15 @@ on:
       - '**/*.lock'
       - '**/*.patch'
   workflow_dispatch:
+    inputs:
+      build_type:
+        description: "Build configuration"
+        required: true
+        default: debug
+        type: choice
+        options:
+          - debug
+          - release
 
 permissions:
   contents: read
@@ -48,7 +57,11 @@ jobs:
       - name: Build ayugram-desktop
         id: build
         run: |
-          nix --print-build-logs --max-jobs 2 build --accept-flake-config .#packages.${{ matrix.system }}.ayugram-desktop
+          package=ayugram-desktop-debug
+          if [ "${{ inputs.build_type }}" = "release" ]; then
+            package=ayugram-desktop
+          fi
+          nix --print-build-logs --max-jobs 2 build --accept-flake-config .#packages.${{ matrix.system }}.$package
           SP=$(readlink result)
           echo "store_path=$SP" >> $GITHUB_OUTPUT
           echo "Built: $SP"

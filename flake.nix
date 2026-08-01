@@ -28,8 +28,13 @@
     packages = forEachSystem (system: let
       pkgs = import nixpkgs {inherit system;};
       ayugram-desktop = pkgs.kdePackages.callPackage ./default.nix {tg_owt = tg_owt.packages.${system}.default;};
+      ayugram-desktop-debug = pkgs.kdePackages.callPackage ./default.nix {
+        isDebug = true;
+        tg_owt = tg_owt.packages.${system}.default;
+      };
     in {
       inherit ayugram-desktop;
+      inherit ayugram-desktop-debug;
       default = ayugram-desktop;
     });
   };
