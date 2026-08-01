@@ -70,9 +70,11 @@ stdenv.mkDerivation (finalAttrs: {
     qtwayland
     kcoreaddons
     hunspell
-  ];
+   ];
 
   dontWrapQtApps = true;
+  hardeningDisable = [ "all" ];
+  NIX_CFLAGS_COMPILE = "-Wno-sign-conversion -Wno-error";
   postPatch = ''
     mkdir -p $TMPDIR/pkgconfig
     cp ${minizip-ng}/lib/pkgconfig/minizip-ng.pc $TMPDIR/pkgconfig/minizip.pc
