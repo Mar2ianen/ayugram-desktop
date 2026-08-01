@@ -58,6 +58,7 @@ stdenv.mkDerivation (finalAttrs: {
     ffmpeg_6
     openal-soft
     minizip-ng
+    minizip-ng.dev
     range-v3
     tl-expected
     rnnoise
@@ -74,8 +75,11 @@ stdenv.mkDerivation (finalAttrs: {
 
   dontWrapQtApps = true;
   postPatch = ''
-    pkgconfig_dir=$(pkg-config --variable=pcfiledir minizip-ng)
-    ln -s "$pkgconfig_dir/minizip-ng.pc" "$pkgconfig_dir/minizip.pc"
+    mkdir -p $TMPDIR/pkgconfig
+    cp ${minizip-ng.dev}/lib/pkgconfig/minizip-ng.pc $TMPDIR/pkgconfig/minizip.pc
+  '';
+  preBuild = ''
+    export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$TMPDIR/pkgconfig
   '';
   cmakeFlags = [
     (lib.cmakeBool "DESKTOP_APP_DISABLE_AUTOUPDATE" true)
