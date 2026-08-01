@@ -73,6 +73,10 @@ stdenv.mkDerivation (finalAttrs: {
   ];
 
   dontWrapQtApps = true;
+  postPatch = ''
+    pkgconfig_dir=$(pkg-config --variable=pcfiledir minizip-ng)
+    ln -s "$pkgconfig_dir/minizip-ng.pc" "$pkgconfig_dir/minizip.pc"
+  '';
   cmakeFlags = [
     (lib.cmakeBool "DESKTOP_APP_DISABLE_AUTOUPDATE" true)
     (lib.cmakeFeature "TDESKTOP_API_ID" "611335")
