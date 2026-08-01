@@ -11,6 +11,13 @@
   qtsvg,
   qtwayland,
   kcoreaddons,
+  libxcb,
+  xcbutil,
+  xcbutilcursor,
+  xcbutilimage,
+  xcbutilkeysyms,
+  xcbutilrenderutil,
+  xcbutilwm,
   lz4,
   xxhash,
   ffmpeg_6,
@@ -67,9 +74,16 @@ stdenv.mkDerivation (finalAttrs: {
     ada
     (tdlib.override {tde2eOnly = true;})
     protobuf
-    qtwayland
-    kcoreaddons
-    hunspell
+     qtwayland
+     kcoreaddons
+     hunspell
+     libxcb
+     xcbutil
+     xcbutilcursor
+     xcbutilimage
+     xcbutilkeysyms
+     xcbutilrenderutil
+     xcbutilwm
    ];
 
   dontWrapQtApps = true;
@@ -78,6 +92,27 @@ stdenv.mkDerivation (finalAttrs: {
   postPatch = ''
     mkdir -p $TMPDIR/pkgconfig
     cp ${minizip-ng}/lib/pkgconfig/minizip-ng.pc $TMPDIR/pkgconfig/minizip.pc
+    mkdir -p cmake/external/xcb
+    cat > cmake/external/xcb/CMakeLists.txt << 'XCBEOF'
+add_library(external_xcb INTERFACE IMPORTED GLOBAL)
+add_library(desktop-app::external_xcb ALIAS external_xcb)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(DESKTOP_APP_XCB REQUIRED IMPORTED_TARGET
+  xcb
+  xcb-cursor
+  xcb-icccm
+  xcb-image
+  xcb-keysyms
+  xcb-randr
+  xcb-render-util
+  xcb-shape
+  xcb-sync
+  xcb-util
+  xcb-xfixes
+)
+target_link_libraries(external_xcb INTERFACE PkgConfig::DESKTOP_APP_XCB)
+XCBEOF
+    printf '\nadd_subdirectory(external/xcb)\n' >> cmake/CMakeLists.txt
   '';
   preConfigure = ''
     export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$TMPDIR/pkgconfig
