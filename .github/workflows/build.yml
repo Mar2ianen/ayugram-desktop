@@ -3,7 +3,7 @@ run-name: "build"
 
 on:
   push:
-    branches: [rebase-telegram-desktop-7]
+    branches: [rebase-telegram-desktop-7, test-rebased-7.0.6]
     paths:
       - '**/*.nix'
       - '**/*.lock'

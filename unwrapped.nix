@@ -34,12 +34,12 @@ stdenv.mkDerivation (finalAttrs: {
   pname = "ayugram-desktop-unwrapped";
   version = "6.7.8";
   src = fetchFromGitHub {
-    owner = "AyuGram";
+    owner = "Mar2ianen";
     repo = "AyuGramDesktop";
-    rev = "v${finalAttrs.version}";
+    rev = "rebased-7.0.6";
 
     fetchSubmodules = true;
-    hash = "sha256-X0g/zl5pJE8S5rkk7o81LiDNClLEMDyHVxmdoO4X9DE=";
+    hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
   };
 
   nativeBuildInputs = [
