@@ -104,7 +104,7 @@ pkg_check_modules(DESKTOP_APP_XCB REQUIRED IMPORTED_TARGET
   xcb-image
   xcb-keysyms
   xcb-randr
-  xcb-render-util
+  xcb-renderutil
   xcb-shape
   xcb-sync
   xcb-util
