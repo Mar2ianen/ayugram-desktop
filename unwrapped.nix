@@ -36,7 +36,7 @@ stdenv.mkDerivation (finalAttrs: {
   src = fetchFromGitHub {
     owner = "Mar2ianen";
     repo = "AyuGramDesktop";
-    rev = "1bc9bb3234f6cd36061b2816c6e0d396e4996599";
+    rev = "a277a5217675a542df976dc61ba9218a78034384";
 
     fetchSubmodules = true;
     hash = "sha256-ulv1DAP93X1hdBGcPLQ+DF7F9ybQyrC/VU1zqhqNTW8=";
