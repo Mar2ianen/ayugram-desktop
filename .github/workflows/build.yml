@@ -3,7 +3,7 @@ run-name: "build"
 
 on:
   push:
-    branches: [rebase-telegram-desktop-7, test-rebased-7.0.6]
+    branches: [rebase-telegram-desktop-7]
     paths:
       - '**/*.nix'
       - '**/*.lock'
@@ -23,7 +23,7 @@ jobs:
   build:
     name: Build ayugram-desktop (${{ matrix.system }})
     runs-on: ubuntu-22.04
-    timeout-minutes: 300
+    timeout-minutes: 480
     strategy:
       fail-fast: false
       matrix:
@@ -39,16 +39,16 @@ jobs:
         with:
           extra_nix_config: |
             experimental-features = nix-command flakes
-            substituters = https://cache.nixos.org
-            trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0ATULk5KPsnPonf3dmAxxEXG5kS54Y=
+            substituters = https://cache.nixos.org https://ayugram-desktop.cachix.org https://tg-owt.cachix.org
+            trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0ATULk5KPsnPonf3dmAxxEXG5kS54Y= ayugram-desktop.cachix.org-1:AZ5EqHrJsAKL5YkZYLPEsb1FdD9QlypUwQ0REcJftgA= tg-owt.cachix.org-1:lp0BukIhSK3EIyLcDhDZ5zABgT48nmNp6t4SnZ0wr8w=
 
       - name: flake check
-        run: nix flake check --no-write-lock-file .#
+        run: nix flake check --no-write-lock-file --accept-flake-config .#
 
       - name: Build ayugram-desktop
         id: build
         run: |
-          nix --print-build-logs build .#packages.${{ matrix.system }}.ayugram-desktop
+          nix --print-build-logs build --accept-flake-config .#packages.${{ matrix.system }}.ayugram-desktop
           SP=$(readlink result)
           echo "store_path=$SP" >> $GITHUB_OUTPUT
           echo "Built: $SP"
