@@ -128,6 +128,7 @@ XCBEOF
       then "Debug"
       else "Release"
     ))
+    (lib.cmakeFeature "CMAKE_CXX_FLAGS_DEBUG" "-O0 -g0")
   ];
 
   meta = with lib; {
