@@ -90,7 +90,7 @@ stdenv.mkDerivation (finalAttrs: {
 
   dontWrapQtApps = true;
   hardeningDisable = [ "all" ];
-  NIX_CFLAGS_COMPILE = "-Wno-sign-conversion -Wno-error";
+  NIX_CFLAGS_COMPILE = "-Wno-sign-conversion -Wno-error -g0";
   postPatch = ''
     mkdir -p $TMPDIR/pkgconfig
     cp ${minizip-ng}/lib/pkgconfig/minizip-ng.pc $TMPDIR/pkgconfig/minizip.pc
@@ -128,7 +128,7 @@ XCBEOF
       then "Debug"
       else "Release"
     ))
-    (lib.cmakeFeature "CMAKE_CXX_FLAGS_DEBUG" "-O0 -g0")
+    (lib.cmakeFeature "CMAKE_CXX_FLAGS_DEBUG" "-O0")
   ];
 
   meta = with lib; {
