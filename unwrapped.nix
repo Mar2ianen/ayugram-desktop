@@ -28,6 +28,7 @@
   range-v3,
   tl-expected,
   hunspell,
+  icu,
   gobject-introspection,
   rnnoise,
   microsoft-gsl,
@@ -79,6 +80,7 @@ stdenv.mkDerivation (finalAttrs: {
      qtwayland
      kcoreaddons
      hunspell
+     icu
      libxcb
      xcbutil
      xcbutilcursor
@@ -91,6 +93,7 @@ stdenv.mkDerivation (finalAttrs: {
   dontWrapQtApps = true;
   hardeningDisable = [ "all" ];
   NIX_CFLAGS_COMPILE = "-Wno-sign-conversion -Wno-error -g0";
+  NIX_LDFLAGS = "-licui18n -licuuc -licudata";
   postPatch = ''
     mkdir -p $TMPDIR/pkgconfig
     cp ${minizip-ng}/lib/pkgconfig/minizip-ng.pc $TMPDIR/pkgconfig/minizip.pc
