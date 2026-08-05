@@ -44,10 +44,10 @@ stdenv.mkDerivation (finalAttrs: {
   src = fetchFromGitHub {
     owner = "Mar2ianen";
     repo = "AyuGramDesktop";
-    rev = "cad4dd2b72a2a2c681a512f8bb8542172926c449";
+    rev = "a48fe00c6e3f8d5815d7e7e8370bf1106ea5b118";
 
     fetchSubmodules = true;
-    hash = "sha256-c/+MLi2bjzzSepAAZrvlSJdYlh+K+O6RHLAf4RaTsbk=";
+    hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
   };
 
   nativeBuildInputs = [
