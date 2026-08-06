@@ -105,6 +105,14 @@ jobs:
           BUNDLE_ROOT="$RUNNER_TEMP/ayugram-bundle"
           mkdir -p "$BUNDLE_ROOT"
           (cd "$BUNDLE_ROOT" && "$BUNDLE" --extract)
+          for bundled_path in "$BUNDLE_ROOT"/dat/nix/store/*; do
+            store_name=$(basename "$bundled_path")
+            host_path="/nix/store/$store_name"
+            if [ -d "$host_path" ]; then
+              rm -rf "$bundled_path"
+              cp -a "$host_path" "$bundled_path"
+            fi
+          done
           ARCHIVE="$RUNNER_TEMP/ayugram-desktop-${package}.tar.bz2"
           tar -cjf "$ARCHIVE" -C "$BUNDLE_ROOT" dat env run
           echo "bundle_path=$ARCHIVE" >> "$GITHUB_OUTPUT"
