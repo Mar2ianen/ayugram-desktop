@@ -9,6 +9,10 @@ bin_dir="$HOME/.local/bin"
 shopt -s nullglob globstar
 bundle_dir="$install_dir/bundle"
 
+if [[ "${AYUGRAM_FORCE_REINSTALL:-0}" == 1 ]]; then
+  rm -rf "$bundle_dir"
+fi
+
 if [[ ! -d "$bundle_dir/dat/nix/store" ]]; then
   tmp_dir="$(mktemp -d)"
   trap 'rm -rf "$tmp_dir"' EXIT
@@ -37,7 +41,7 @@ if [[ ! -d "$bundle_dir/dat/nix/store" ]]; then
   mkdir -p "$bundle_dir"
   case "$bundle" in
     *.tar.bz2)
-      tar -xjf "$bundle" -C "$bundle_dir"
+      tar --no-same-owner -xjf "$bundle" -C "$bundle_dir"
       ;;
     *)
       (cd "$bundle_dir" && "$bundle" --extract)
@@ -62,6 +66,7 @@ if [[ -z "$telegram_bin" ]]; then
   exit 1
 fi
 
+chmod u+rwx "${telegram_bin%/*}"
 ln -sfn Telegram "${telegram_bin%/*}/AyuGram"
 
 startup=''
