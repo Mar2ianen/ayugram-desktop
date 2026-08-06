@@ -56,6 +56,7 @@ jobs:
         if: inputs.build_type != 'release'
         run: |
           mkdir -p "$GITHUB_WORKSPACE/.sccache"
+          chmod -R a+rwX "$GITHUB_WORKSPACE/.sccache"
           ln -s "$GITHUB_WORKSPACE/.sccache" /tmp/ayugram-sccache
 
       - name: Install Nix
