@@ -122,6 +122,9 @@ stdenv.mkDerivation (finalAttrs: {
   SCCACHE_DIR = lib.optionalString isDebug "/tmp/ayugram-sccache";
   SCCACHE_BASEDIRS = lib.optionalString isDebug "/build:/nix/store";
   SCCACHE_CACHE_SIZE = lib.optionalString isDebug "8G";
+  patches = [
+    ./patches/ayu-lang-subsets.patch
+  ];
   postPatch = ''
     mkdir -p $TMPDIR/pkgconfig
     cp ${minizip-ng}/lib/pkgconfig/minizip-ng.pc $TMPDIR/pkgconfig/minizip.pc

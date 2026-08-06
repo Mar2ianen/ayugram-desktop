@@ -1,0 +1,21 @@
+diff --git a/Telegram/cmake/generate_lang.cmake b/Telegram/cmake/generate_lang.cmake
+index ec8518b60..9d9c08d12 100644
+--- a/Telegram/cmake/generate_lang.cmake
++++ b/Telegram/cmake/generate_lang.cmake
+@@ -44,9 +44,14 @@ function(generate_lang target_name lang_file src_loc)
+         foreach (entry ${lang_sources})
+             if (entry MATCHES "\\.(cpp|mm)$")
+                 file(RELATIVE_PATH relative ${src_loc} ${entry})
+-                list(APPEND subset_headers ${gen_dst}/lang_subsets/${relative}.h)
++                if (relative MATCHES "^ayu/")
++                    set(subset_header "lang_auto_keys.h")
++                else()
++                    set(subset_header "lang_subsets/${relative}.h")
++                    list(APPEND subset_headers ${gen_dst}/${subset_header})
++                endif()
+                 set_property(SOURCE ${entry} APPEND PROPERTY COMPILE_DEFINITIONS
+-                    "LANG_KEYS_SUBSET=\"lang_subsets/${relative}.h\"")
++                    "LANG_KEYS_SUBSET=\"${subset_header}\"")
+             endif()
+         endforeach()
+ 
