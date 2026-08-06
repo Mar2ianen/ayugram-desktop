@@ -57,7 +57,10 @@ jobs:
         run: |
           mkdir -p "$GITHUB_WORKSPACE/.sccache"
           chmod -R a+rwX "$GITHUB_WORKSPACE/.sccache"
-          ln -s "$GITHUB_WORKSPACE/.sccache" /tmp/ayugram-sccache
+          mkdir -p /tmp/ayugram-sccache
+          chmod -R a+rwX /tmp/ayugram-sccache
+          cp -a "$GITHUB_WORKSPACE/.sccache/." /tmp/ayugram-sccache/ 2>/dev/null || true
+          chmod -R a+rwX /tmp/ayugram-sccache
 
       - name: Install Nix
         uses: cachix/install-nix-action@v20
@@ -115,6 +118,13 @@ jobs:
           if-no-files-found: error
 
       - name: Save sccache
+        if: always() && inputs.build_type != 'release'
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/.sccache"
+          cp -a /tmp/ayugram-sccache/. "$GITHUB_WORKSPACE/.sccache/" 2>/dev/null || true
+          chmod -R a+rwX "$GITHUB_WORKSPACE/.sccache"
+
+      - name: Persist sccache cache
         if: always() && inputs.build_type != 'release'
         uses: actions/cache/save@v4
         with:
