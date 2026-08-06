@@ -30,9 +30,46 @@ if [[ -z "$bundle" ]]; then
   exit 1
 fi
 
-mkdir -p "$install_dir" "$bin_dir"
-install -Dm755 "$bundle" "$install_dir/ayugram-desktop"
-ln -sfn "$install_dir/ayugram-desktop" "$bin_dir/ayugram-desktop"
+bundle_dir="$install_dir/bundle"
+rm -rf "$bundle_dir"
+mkdir -p "$bundle_dir" "$bin_dir"
+(cd "$bundle_dir" && "$bundle" --extract)
 
-printf 'Installed: %s\n' "$install_dir/ayugram-desktop"
+telegram_bin=''
+for candidate in "$bundle_dir"/dat/nix/store/*-ayugram-desktop-*/bin/Telegram; do
+  if [[ -x "$candidate" ]]; then
+    telegram_bin="$candidate"
+    break
+  fi
+done
+
+if [[ -z "$telegram_bin" ]]; then
+  printf 'Telegram executable was not found in extracted bundle.\n' >&2
+  exit 1
+fi
+
+ln -sfn Telegram "${telegram_bin%/*}/AyuGram"
+
+startup=''
+for candidate in "$bundle_dir"/dat/nix/store/*-startup; do
+  if [[ -x "$candidate" ]]; then
+    startup="$candidate"
+    break
+  fi
+done
+
+if [[ -z "$startup" ]]; then
+  printf 'Bundle startup script was not found.\n' >&2
+  exit 1
+fi
+
+cat > "$bin_dir/ayugram-desktop" <<EOF
+#!/bin/sh
+set -eu
+cd "$bundle_dir/dat"
+exec "$startup" "\$@"
+EOF
+chmod +x "$bin_dir/ayugram-desktop"
+
+printf 'Installed: %s\n' "$bin_dir/ayugram-desktop"
 printf 'Run: ayugram-desktop\n'
