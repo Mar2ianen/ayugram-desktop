@@ -28,6 +28,7 @@
   range-v3,
   tl-expected,
   hunspell,
+  sccache,
   icu,
   gobject-introspection,
   rnnoise,
@@ -58,7 +59,7 @@ stdenv.mkDerivation (finalAttrs: {
     python3
     clang
     gobject-introspection
-  ];
+  ] ++ lib.optional isDebug sccache;
   buildInputs = [
     qtbase
     qtsvg
@@ -88,12 +89,15 @@ stdenv.mkDerivation (finalAttrs: {
      xcbutilkeysyms
      xcbutilrenderutil
      xcbutilwm
-   ];
+    ];
 
   dontWrapQtApps = true;
   hardeningDisable = [ "all" ];
   NIX_CFLAGS_COMPILE = "-Wno-sign-conversion -Wno-error -g0";
   NIX_LDFLAGS = "-licui18n -licuuc -licudata";
+  SCCACHE_DIR = lib.optionalString isDebug "/tmp/ayugram-sccache";
+  SCCACHE_BASEDIRS = lib.optionalString isDebug "/build:/nix/store";
+  SCCACHE_CACHE_SIZE = lib.optionalString isDebug "8G";
   postPatch = ''
     mkdir -p $TMPDIR/pkgconfig
     cp ${minizip-ng}/lib/pkgconfig/minizip-ng.pc $TMPDIR/pkgconfig/minizip.pc
@@ -132,6 +136,9 @@ XCBEOF
       else "Release"
     ))
     (lib.cmakeFeature "CMAKE_CXX_FLAGS_DEBUG" "-O0")
+  ] ++ lib.optionals isDebug [
+    (lib.cmakeFeature "CMAKE_C_COMPILER_LAUNCHER" "sccache")
+    (lib.cmakeFeature "CMAKE_CXX_COMPILER_LAUNCHER" "sccache")
   ];
 
   meta = with lib; {

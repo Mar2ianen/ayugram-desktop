@@ -43,6 +43,21 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Restore sccache
+        if: inputs.build_type != 'release'
+        uses: actions/cache/restore@v4
+        with:
+          path: .sccache
+          key: sccache-${{ runner.os }}-${{ matrix.system }}-${{ github.sha }}
+          restore-keys: |
+            sccache-${{ runner.os }}-${{ matrix.system }}-
+
+      - name: Prepare sccache directory
+        if: inputs.build_type != 'release'
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/.sccache"
+          ln -s "$GITHUB_WORKSPACE/.sccache" /tmp/ayugram-sccache
+
       - name: Install Nix
         uses: cachix/install-nix-action@v20
         with:
@@ -61,16 +76,46 @@ jobs:
           if [ "${{ inputs.build_type }}" = "release" ]; then
             package=ayugram-desktop
           fi
-          nix --print-build-logs --max-jobs 1 --cores 4 build --accept-flake-config .#packages.${{ matrix.system }}.$package
+          build_options=()
+          if [ "${{ inputs.build_type }}" != "release" ]; then
+            build_options+=(--option sandbox false)
+          fi
+          nix --print-build-logs --max-jobs 1 --cores 4 "${build_options[@]}" build --accept-flake-config .#packages.${{ matrix.system }}.$package
           SP=$(readlink result)
           echo "store_path=$SP" >> $GITHUB_OUTPUT
           echo "Built: $SP"
           ls -la "$SP"
 
+      - name: Bundle ayugram-desktop
+        id: bundle
+        run: |
+          package=ayugram-desktop-debug
+          if [ "${{ inputs.build_type }}" = "release" ]; then
+            package=ayugram-desktop
+          fi
+          nix bundle --accept-flake-config --no-write-lock-file \
+            --out-link ayugram-desktop-bundle \
+            ".#packages.${{ matrix.system }}.$package"
+          BUNDLE=$(readlink -f ayugram-desktop-bundle)
+          test -x "$BUNDLE"
+          echo "bundle_path=$BUNDLE" >> "$GITHUB_OUTPUT"
+          file "$BUNDLE"
+
+      - name: Show sccache statistics
+        if: always() && inputs.build_type != 'release'
+        run: nix shell nixpkgs#sccache --command sccache --show-stats || true
+
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ayugram-desktop-linux
-          path: ${{ steps.build.outputs.store_path }}
+          name: ayugram-desktop-linux-${{ inputs.build_type || 'debug' }}
+          path: ${{ steps.bundle.outputs.bundle_path }}
           retention-days: 14
           if-no-files-found: error
+
+      - name: Save sccache
+        if: always() && inputs.build_type != 'release'
+        uses: actions/cache/save@v4
+        with:
+          path: .sccache
+          key: sccache-${{ runner.os }}-${{ matrix.system }}-${{ github.sha }}
