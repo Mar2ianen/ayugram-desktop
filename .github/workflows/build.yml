@@ -102,8 +102,13 @@ jobs:
             ".#packages.${{ matrix.system }}.$package"
           BUNDLE=$(readlink -f ayugram-desktop-bundle)
           test -x "$BUNDLE"
-          echo "bundle_path=$BUNDLE" >> "$GITHUB_OUTPUT"
-          file "$BUNDLE"
+          BUNDLE_ROOT="$RUNNER_TEMP/ayugram-bundle"
+          mkdir -p "$BUNDLE_ROOT"
+          (cd "$BUNDLE_ROOT" && "$BUNDLE" --extract)
+          ARCHIVE="$RUNNER_TEMP/ayugram-desktop-${package}.tar.bz2"
+          tar -cjf "$ARCHIVE" -C "$BUNDLE_ROOT" dat env run
+          echo "bundle_path=$ARCHIVE" >> "$GITHUB_OUTPUT"
+          file "$ARCHIVE"
 
       - name: Show sccache statistics
         if: always() && inputs.build_type != 'release'

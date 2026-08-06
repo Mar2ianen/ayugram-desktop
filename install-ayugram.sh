@@ -33,7 +33,14 @@ fi
 bundle_dir="$install_dir/bundle"
 rm -rf "$bundle_dir"
 mkdir -p "$bundle_dir" "$bin_dir"
-(cd "$bundle_dir" && "$bundle" --extract)
+case "$bundle" in
+  *.tar.bz2)
+    tar -xjf "$bundle" -C "$bundle_dir"
+    ;;
+  *)
+    (cd "$bundle_dir" && "$bundle" --extract)
+    ;;
+esac
 
 telegram_bin=''
 for candidate in "$bundle_dir"/dat/nix/store/*-ayugram-desktop-*/bin/Telegram; do
