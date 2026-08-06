@@ -2,7 +2,7 @@
 set -euo pipefail
 
 repo="Mar2ianen/ayugram-desktop"
-run_id="${AYUGRAM_RUN_ID:-31059958015}"
+run_id="${AYUGRAM_RUN_ID:-31081595003}"
 artifact="${AYUGRAM_ARTIFACT:-ayugram-desktop-linux-debug}"
 install_dir="${XDG_DATA_HOME:-$HOME/.local/share}/ayugram-desktop"
 bin_dir="$HOME/.local/bin"
