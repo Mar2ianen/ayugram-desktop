@@ -12,6 +12,18 @@
   qtwayland,
   kcoreaddons,
   libxcb,
+  libX11,
+  libXext,
+  libXrender,
+  libXi,
+  libXrandr,
+  libXfixes,
+  libXcursor,
+  libXcomposite,
+  libXdamage,
+  libXtst,
+  libXScrnSaver,
+  libXinerama,
   xcbutil,
   xcbutilcursor,
   xcbutilimage,
@@ -83,6 +95,18 @@ stdenv.mkDerivation (finalAttrs: {
      hunspell
      icu
      libxcb
+     libX11
+     libXext
+     libXrender
+     libXi
+     libXrandr
+     libXfixes
+     libXcursor
+     libXcomposite
+     libXdamage
+     libXtst
+     libXScrnSaver
+     libXinerama
      xcbutil
      xcbutilcursor
      xcbutilimage
