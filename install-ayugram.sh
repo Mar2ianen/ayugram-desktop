@@ -54,7 +54,7 @@ fi
 mkdir -p "$bin_dir"
 
 telegram_bin=''
-for candidate in "$bundle_dir"/dat/nix/store/*-ayugram-desktop-*/bin/Telegram; do
+for candidate in "$bundle_dir"/dat/nix/store/*-ayugram-desktop-*/bin/AyuGram; do
   if [[ -x "$candidate" ]]; then
     telegram_bin="$candidate"
     break
@@ -62,12 +62,11 @@ for candidate in "$bundle_dir"/dat/nix/store/*-ayugram-desktop-*/bin/Telegram; d
 done
 
 if [[ -z "$telegram_bin" ]]; then
-  printf 'Telegram executable was not found in extracted bundle.\n' >&2
+  printf 'AyuGram executable was not found in extracted bundle.\n' >&2
   exit 1
 fi
 
 chmod u+rwx "${telegram_bin%/*}"
-ln -sfn Telegram "${telegram_bin%/*}/AyuGram"
 
 startup=''
 for candidate in "$bundle_dir"/dat/nix/store/*-startup; do

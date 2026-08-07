@@ -169,7 +169,7 @@ XCBEOF
   ];
 
   meta = with lib; {
-    mainProgram = "Telegram";
+    mainProgram = "AyuGram";
     maintainers = with maintainers; [kaeeraa s0me1newithhand7s];
     platforms = with platforms; builtins.filter (x: x != darwin) all;
     description = "Desktop Telegram client with good customization and Ghost mode.";
