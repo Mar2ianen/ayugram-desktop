@@ -10,7 +10,7 @@
 > [!TIP]
 > NEW!!!
 > `ayugram-desktop` is already in [nixpkgs](https://github.com/NixOS/nixpkgs/blob/master/pkgs/by-name/ay/ayugram-desktop/package.nix)
-> but it's an override for `telegram-desktop`, so `ndfined-crp/ayugram-desktop`
+> but it's an override for `telegram-desktop`, so `Mar2ianen/ayugram-desktop`
 > flake is still better, because we don't rely on `telegram-desktop` being able to build -
 > and we won't push a broken update.
 
@@ -40,7 +40,7 @@
        ayugram-desktop = {
          type = "git";
          submodules = true;
-         url = "https://github.com/ndfined-crp/ayugram-desktop/";
+         url = "https://github.com/Mar2ianen/ayugram-desktop/";
         };
      };
 
@@ -84,6 +84,17 @@
    ```
 
 3. Now rebuild, and feel free to use `ayugram-desktop`!
+
+> [!TIP]
+> On any Linux with Nix installed (not just NixOS) you can run it directly:
+
+```sh
+# Run without installing
+nix run github:Mar2ianen/ayugram-desktop
+
+# Install into user profile
+nix profile install github:Mar2ianen/ayugram-desktop
+```
 
 <h2 align="center"> ⚡ Manual Binary Cache Setup</h2>
 
