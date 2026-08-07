@@ -90,11 +90,48 @@
 
 ```sh
 # Run without installing
-nix run github:Mar2ianen/ayugram-desktop
+nix run --accept-flake-config github:Mar2ianen/ayugram-desktop
 
 # Install into user profile
-nix profile install github:Mar2ianen/ayugram-desktop
+nix profile install --accept-flake-config github:Mar2ianen/ayugram-desktop
 ```
+
+<h2 align="center"> 🐧 Arch Linux (и другие не-NixOS дистрибутивы)</h2>
+
+Если у вас ещё нет Nix — поставьте его на Arch:
+
+```sh
+sudo pacman -S nix
+sudo systemctl enable --now nix-daemon
+```
+
+Затем подключите кэш сборок (бинарники наш уже собраны — локально компилировать НЕ придётся):
+
+```sh
+sudo sh -c 'echo "trusted-users = @wheel" >> /etc/nix/nix.conf'
+sudo systemctl restart nix-daemon
+```
+
+И установите:
+
+```sh
+nix profile install --accept-flake-config github:Mar2ianen/ayugram-desktop
+```
+
+Библиотека появится в `~/.nix-profile/bin/AyuGram`, запускайте так:
+
+```sh
+AyuGram
+```
+
+Обновление на новую версию:
+
+```sh
+nix profile upgrade ayugram-desktop
+```
+
+> [!NOTE]
+> `--accept-flake-config` нужен, чтобы Nix разрешил `flakes-кэш` из этого репозитория (substituters уже прописаны в `flake.nix`).
 
 <h2 align="center"> ⚡ Manual Binary Cache Setup</h2>
 
