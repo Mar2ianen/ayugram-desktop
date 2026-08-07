@@ -102,8 +102,8 @@ Simpy add it into your `nix` settings inside nixos configuration:
 
 ```nix
 nix.settings = {
-  substituters = ["https://ayugram-desktop.cachix.org"];
-  trusted-public-keys = ["ayugram-desktop.cachix.org:AZ5EqHrJsAKL5YkZYLPEsb1FdD9QlypUwQ0REcJftgA="];
+  substituters = ["https://mar2ianen-ayugram.cachix.org" "https://tg-owt.cachix.org"];
+  trusted-public-keys = ["mar2ianen-ayugram.cachix.org-1:lBT/myHhswxz97HLBpkbF+4BWPxltMKoPnfs8Nnw6Q0=" "tg-owt.cachix.org-1:lp0BukIhSK3EIyLcDhDZ5zABgT48nmNp6t4SnZ0wr8w="];
 };
 ```
 
