@@ -10,6 +10,18 @@
   qtimageformats,
   qtsvg,
   qtwayland,
+  libX11,
+  libXext,
+  libXrender,
+  libXi,
+  libXrandr,
+  libXfixes,
+  libXcursor,
+  libXcomposite,
+  libXdamage,
+  libXtst,
+  libXScrnSaver,
+  libXinerama,
   kimageformats,
   wrapGAppsHook3,
   wrapQtAppsHook,
@@ -30,9 +42,21 @@ stdenv.mkDerivation (finalAttrs: {
       qtbase
       qtimageformats
       qtsvg
-      kimageformats
-      qtwayland
-    ]
+       kimageformats
+       qtwayland
+       libX11
+       libXext
+       libXrender
+       libXi
+       libXrandr
+       libXfixes
+       libXcursor
+       libXcomposite
+       libXdamage
+       libXtst
+       libXScrnSaver
+       libXinerama
+     ]
     ++ lib.optionals withWebkit [glib-networking];
 
   qtWrapperArgs = lib.optionals withWebkit ["--prefix" "LD_LIBRARY_PATH" ":" (lib.makeLibraryPath [webkitgtk_4_1])];

@@ -11,13 +11,11 @@
 
   nixConfig = {
     extra-substituters = [
-      "https://cache.garnix.io"
-      "https://ayugram-desktop.cachix.org"
+      "https://mar2ianen-ayugram.cachix.org"
       "https://tg-owt.cachix.org"
     ];
     extra-trusted-public-keys = [
-      "cache.garnix.io:CTFPyKSLcx5RMJKfLo5EEPUObbA78b0YQ2DTCJXqr9g="
-      "ayugram-desktop.cachix.org-1:AZ5EqHrJsAKL5YkZYLPEsb1FdD9QlypUwQ0REcJftgA="
+      "mar2ianen-ayugram.cachix.org-1:lBT/myHhswxz97HLBpkbF+4BWPxltMKoPnfs8Nnw6Q0="
       "tg-owt.cachix.org-1:lp0BukIhSK3EIyLcDhDZ5zABgT48nmNp6t4SnZ0wr8w="
     ];
   };
@@ -30,8 +28,13 @@
     packages = forEachSystem (system: let
       pkgs = import nixpkgs {inherit system;};
       ayugram-desktop = pkgs.kdePackages.callPackage ./default.nix {tg_owt = tg_owt.packages.${system}.default;};
+      ayugram-desktop-debug = pkgs.kdePackages.callPackage ./default.nix {
+        isDebug = true;
+        tg_owt = tg_owt.packages.${system}.default;
+      };
     in {
       inherit ayugram-desktop;
+      inherit ayugram-desktop-debug;
       default = ayugram-desktop;
     });
   };

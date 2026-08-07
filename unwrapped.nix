@@ -11,15 +11,37 @@
   qtsvg,
   qtwayland,
   kcoreaddons,
+  libxcb,
+  libX11,
+  libXext,
+  libXrender,
+  libXi,
+  libXrandr,
+  libXfixes,
+  libXcursor,
+  libXcomposite,
+  libXdamage,
+  libXtst,
+  libXScrnSaver,
+  libXinerama,
+  xcbutil,
+  xcbutilcursor,
+  xcbutilimage,
+  xcbutilkeysyms,
+  xcbutilrenderutil,
+  xcbutilwm,
   lz4,
   xxhash,
   ffmpeg_6,
   protobuf,
   openal-soft,
   minizip-ng,
+  minizip-ng-compat,
   range-v3,
   tl-expected,
   hunspell,
+  sccache,
+  icu,
   gobject-introspection,
   rnnoise,
   microsoft-gsl,
@@ -32,14 +54,14 @@
 }:
 stdenv.mkDerivation (finalAttrs: {
   pname = "ayugram-desktop-unwrapped";
-  version = "6.7.8";
+  version = "7.0.4";
   src = fetchFromGitHub {
     owner = "AyuGram";
     repo = "AyuGramDesktop";
-    rev = "v${finalAttrs.version}";
+    rev = "4c23f16ab84c55b6fde47e7b32c3ccb1875b9a9b";
 
     fetchSubmodules = true;
-    hash = "sha256-X0g/zl5pJE8S5rkk7o81LiDNClLEMDyHVxmdoO4X9DE=";
+    hash = "sha256-P4Ze6r4sTCMbxP2sRhjmTo1TNusvfg6oka41R687Yu4=";
   };
 
   nativeBuildInputs = [
@@ -49,7 +71,7 @@ stdenv.mkDerivation (finalAttrs: {
     python3
     clang
     gobject-introspection
-  ];
+  ] ++ lib.optional isDebug sccache;
   buildInputs = [
     qtbase
     qtsvg
@@ -57,7 +79,8 @@ stdenv.mkDerivation (finalAttrs: {
     xxhash
     ffmpeg_6
     openal-soft
-    minizip-ng
+     minizip-ng
+     minizip-ng-compat
     range-v3
     tl-expected
     rnnoise
@@ -67,12 +90,69 @@ stdenv.mkDerivation (finalAttrs: {
     ada
     (tdlib.override {tde2eOnly = true;})
     protobuf
-    qtwayland
-    kcoreaddons
-    hunspell
-  ];
+     qtwayland
+     kcoreaddons
+     hunspell
+     icu
+     libxcb
+     libX11
+     libXext
+     libXrender
+     libXi
+     libXrandr
+     libXfixes
+     libXcursor
+     libXcomposite
+     libXdamage
+     libXtst
+     libXScrnSaver
+     libXinerama
+     xcbutil
+     xcbutilcursor
+     xcbutilimage
+     xcbutilkeysyms
+     xcbutilrenderutil
+     xcbutilwm
+    ];
 
   dontWrapQtApps = true;
+  hardeningDisable = [ "all" ];
+  NIX_CFLAGS_COMPILE = "-Wno-sign-conversion -Wno-error -g0";
+  NIX_LDFLAGS = "-licui18n -licuuc -licudata";
+  SCCACHE_DIR = lib.optionalString isDebug "/tmp/ayugram-sccache";
+  SCCACHE_BASEDIRS = lib.optionalString isDebug "/build:/nix/store";
+  SCCACHE_CACHE_SIZE = lib.optionalString isDebug "8G";
+  patches = [
+    ./patches/ayu-lang-subsets.patch
+  ];
+  postPatch = ''
+    mkdir -p $TMPDIR/pkgconfig
+    cp ${minizip-ng}/lib/pkgconfig/minizip-ng.pc $TMPDIR/pkgconfig/minizip.pc
+    mkdir -p cmake/external/xcb
+    cat > cmake/external/xcb/CMakeLists.txt << 'XCBEOF'
+add_library(external_xcb INTERFACE IMPORTED GLOBAL)
+add_library(desktop-app::external_xcb ALIAS external_xcb)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(DESKTOP_APP_XCB REQUIRED IMPORTED_TARGET
+  xcb
+  xcb-cursor
+  xcb-icccm
+  xcb-image
+  xcb-keysyms
+  xcb-randr
+  xcb-renderutil
+  xcb-shape
+  xcb-sync
+  xcb-util
+  xcb-xfixes
+)
+target_link_libraries(external_xcb INTERFACE PkgConfig::DESKTOP_APP_XCB)
+XCBEOF
+    printf '\nadd_subdirectory(external/xcb)\n' >> cmake/CMakeLists.txt
+  '';
+  preConfigure = ''
+    export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$TMPDIR/pkgconfig
+  '';
   cmakeFlags = [
     (lib.cmakeBool "DESKTOP_APP_DISABLE_AUTOUPDATE" true)
     (lib.cmakeFeature "TDESKTOP_API_ID" "611335")
@@ -82,6 +162,10 @@ stdenv.mkDerivation (finalAttrs: {
       then "Debug"
       else "Release"
     ))
+    (lib.cmakeFeature "CMAKE_CXX_FLAGS_DEBUG" "-O0")
+  ] ++ lib.optionals isDebug [
+    (lib.cmakeFeature "CMAKE_C_COMPILER_LAUNCHER" "sccache")
+    (lib.cmakeFeature "CMAKE_CXX_COMPILER_LAUNCHER" "sccache")
   ];
 
   meta = with lib; {

@@ -1,0 +1,14 @@
+--- a/Telegram/cmake/generate_lang.cmake
++++ b/Telegram/cmake/generate_lang.cmake
+@@ -43,10 +43,8 @@
+         set(subset_headers "")
+         foreach (entry ${lang_sources})
+             if (entry MATCHES "\\.(cpp|mm)$")
+-                file(RELATIVE_PATH relative ${src_loc} ${entry})
+-                list(APPEND subset_headers ${gen_dst}/lang_subsets/${relative}.h)
+                 set_property(SOURCE ${entry} APPEND PROPERTY COMPILE_DEFINITIONS
+-                    "LANG_KEYS_SUBSET=\"lang_subsets/${relative}.h\"")
++                    "LANG_KEYS_SUBSET=\"lang_auto_keys.h\"")
+             endif()
+         endforeach()
+ 

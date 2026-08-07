@@ -1,0 +1,153 @@
+name: "Build (Linux/Nix)"
+run-name: "build"
+
+on:
+  push:
+    branches: [rebase-telegram-desktop-7, test-rebased-7.0.6]
+    paths:
+      - '**/*.nix'
+      - '**/*.lock'
+      - '**/*.patch'
+      - '.github/workflows/build.yml'
+  pull_request:
+    paths:
+      - '**/*.nix'
+      - '**/*.lock'
+      - '**/*.patch'
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: "Build configuration"
+        required: true
+        default: debug
+        type: choice
+        options:
+          - debug
+          - release
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build ayugram-desktop (${{ matrix.system }})
+    runs-on: ubuntu-22.04
+    timeout-minutes: 480
+    strategy:
+      fail-fast: false
+      matrix:
+        system: [x86_64-linux]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Restore sccache
+        if: inputs.build_type != 'release'
+        uses: actions/cache/restore@v4
+        with:
+          path: .sccache
+          key: sccache-${{ runner.os }}-${{ matrix.system }}-${{ github.sha }}
+          restore-keys: |
+            sccache-${{ runner.os }}-${{ matrix.system }}-
+
+      - name: Prepare sccache directory
+        if: inputs.build_type != 'release'
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/.sccache"
+          chmod -R a+rwX "$GITHUB_WORKSPACE/.sccache"
+          mkdir -p /tmp/ayugram-sccache
+          chmod -R a+rwX /tmp/ayugram-sccache
+          cp -a "$GITHUB_WORKSPACE/.sccache/." /tmp/ayugram-sccache/ 2>/dev/null || true
+          chmod -R a+rwX /tmp/ayugram-sccache
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v20
+        with:
+          nix_path: nixpkgs=nixpkgs/nixpkgs-unstable
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            accept-flake-config = true
+
+      - name: Upload to Cachix
+        uses: cachix/cachix-action@v15
+        with:
+          name: mar2ianen-ayugram
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+          signingKey: '${{ secrets.CACHIX_SIGNING_KEY }}'
+          extraPullNames: tg-owt
+
+      - name: flake check
+        run: nix flake check --no-write-lock-file --accept-flake-config .#
+
+      - name: Build ayugram-desktop
+        id: build
+        run: |
+          package=ayugram-desktop-debug
+          if [ "${{ inputs.build_type }}" = "release" ]; then
+            package=ayugram-desktop
+          fi
+          build_options=()
+          if [ "${{ inputs.build_type }}" != "release" ]; then
+            build_options+=(--option sandbox false)
+          fi
+          nix --print-build-logs --max-jobs 1 --cores 4 "${build_options[@]}" build --accept-flake-config .#packages.${{ matrix.system }}.$package
+          SP=$(readlink result)
+          echo "store_path=$SP" >> $GITHUB_OUTPUT
+          echo "Built: $SP"
+          ls -la "$SP"
+
+      - name: Bundle ayugram-desktop
+        id: bundle
+        run: |
+          package=ayugram-desktop-debug
+          if [ "${{ inputs.build_type }}" = "release" ]; then
+            package=ayugram-desktop
+          fi
+          nix bundle --accept-flake-config --no-write-lock-file \
+            --out-link ayugram-desktop-bundle \
+            ".#packages.${{ matrix.system }}.$package"
+          BUNDLE=$(readlink -f ayugram-desktop-bundle)
+          test -x "$BUNDLE"
+          BUNDLE_ROOT="$RUNNER_TEMP/ayugram-bundle"
+          mkdir -p "$BUNDLE_ROOT"
+          (cd "$BUNDLE_ROOT" && "$BUNDLE" --extract)
+          for bundled_path in "$BUNDLE_ROOT"/dat/nix/store/*; do
+            store_name=$(basename "$bundled_path")
+            host_path="/nix/store/$store_name"
+            if [ -d "$host_path" ]; then
+              rm -rf "$bundled_path"
+              cp -a "$host_path" "$bundled_path"
+            fi
+          done
+          ARCHIVE="$RUNNER_TEMP/ayugram-desktop-${package}.tar.bz2"
+          tar -cjf "$ARCHIVE" -C "$BUNDLE_ROOT" dat env run
+          echo "bundle_path=$ARCHIVE" >> "$GITHUB_OUTPUT"
+          file "$ARCHIVE"
+
+      - name: Show sccache statistics
+        if: always() && inputs.build_type != 'release'
+        run: nix shell nixpkgs#sccache --command sccache --show-stats || true
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ayugram-desktop-linux-${{ inputs.build_type || 'debug' }}
+          path: ${{ steps.bundle.outputs.bundle_path }}
+          retention-days: 14
+          if-no-files-found: error
+
+      - name: Save sccache
+        if: always() && inputs.build_type != 'release'
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/.sccache"
+          cp -a /tmp/ayugram-sccache/. "$GITHUB_WORKSPACE/.sccache/" 2>/dev/null || true
+          chmod -R a+rwX "$GITHUB_WORKSPACE/.sccache"
+
+      - name: Persist sccache cache
+        if: always() && inputs.build_type != 'release'
+        uses: actions/cache/save@v4
+        with:
+          path: .sccache
+          key: sccache-${{ runner.os }}-${{ matrix.system }}-${{ github.sha }}
