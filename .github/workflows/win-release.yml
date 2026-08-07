@@ -48,13 +48,6 @@ jobs:
         shell: bash
         run: echo "REPO_NAME=AyuGramDesktop" >> $GITHUB_ENV
 
-      - name: Get SDK version.
-        shell: bash
-        run: |
-          DOCPATH=$TBUILD/AyuGramDesktop/docs/building-win.md
-          SDK="$(grep "SDK version" $DOCPATH | sed -r 's/.*\*\*(.*)\*\* SDK version.*/\1/')"
-          echo "SDK=$SDK" >> $GITHUB_ENV
-
       - name: Disable debug info flag in MSVC cmake module.
         shell: bash
         run: |
@@ -92,6 +85,13 @@ jobs:
           ref: ${{ env.SOURCE_REF }}
           submodules: recursive
           path: ${{ env.REPO_NAME }}
+
+      - name: Get SDK version.
+        shell: bash
+        run: |
+          DOCPATH=$TBUILD/AyuGramDesktop/docs/building-win.md
+          SDK="$(grep "SDK version" $DOCPATH | sed -r 's/.*\*\*(.*)\*\* SDK version.*/\1/')"
+          echo "SDK=$SDK" >> $GITHUB_ENV
 
       - name: Native Tools Command Prompt.
         uses: Eden-CI/msvc-dev-cmd@master
