@@ -1,0 +1,147 @@
+name: Windows Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build type'
+        required: true
+        default: 'release'
+        type: choice
+        options:
+          - release
+          - debug
+      upload_to_release:
+        description: 'Upload Telegram.exe to GitHub release'
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    name: Windows x64
+    runs-on: windows-latest
+
+    env:
+      BUILD_TYPE: ${{ github.event.inputs.build_type }}
+      UPLOAD_ARTIFACT: "true"
+      PREPARE_PATH: "Telegram/build/prepare/prepare.py"
+      SOURCE_REPO: "AyuGram/AyuGramDesktop"
+      SOURCE_REF: "4c23f16ab84c55b6fde47e7b32c3ccb1875b9a9b"
+
+    defaults:
+      run:
+        shell: cmd
+
+    steps:
+      - name: Prepare directories.
+        run: |
+          mkdir %userprofile%\TBuild\Libraries
+          mklink /d %GITHUB_WORKSPACE%\TBuild %userprofile%\TBuild
+          echo TBUILD=%GITHUB_WORKSPACE%\TBuild>>%GITHUB_ENV%
+          echo LibrariesPath=%GITHUB_WORKSPACE%\TBuild\Libraries\win64>>%GITHUB_ENV%
+
+      - name: Get repository name.
+        shell: bash
+        run: echo "REPO_NAME=AyuGramDesktop" >> $GITHUB_ENV
+
+      - name: Get SDK version.
+        shell: bash
+        run: |
+          DOCPATH=$TBUILD/AyuGramDesktop/docs/building-win.md
+          SDK="$(grep "SDK version" $DOCPATH | sed -r 's/.*\*\*(.*)\*\* SDK version.*/\1/')"
+          echo "SDK=$SDK" >> $GITHUB_ENV
+
+      - name: Disable debug info flag in MSVC cmake module.
+        shell: bash
+        run: |
+          sed -i '/CMAKE_${lang}_FLAGS_DEBUG_INIT/s/${_Zi}//' "$PROGRAMFILES"/CMake/share/cmake*/Modules/Platform/Windows-MSVC.cmake
+          echo "Configurate git for cherry-picks."
+          git config --global user.email "you@example.com"
+          git config --global user.name "Sample"
+
+      - uses: actions/cache@v6
+        id: cache-third-party
+        with:
+          path: ${{ env.TBUILD }}\ThirdParty
+          key: ${{ runner.os }}-win64-third-party-
+
+      - uses: actions/cache@v6
+        id: cache-libs
+        with:
+          path: |
+            ${{ env.LibrariesPath }}\*
+            !${{ env.LibrariesPath }}\cache_keys
+          key: ${{ runner.os }}-win64-libs-
+
+      - uses: actions/cache@v6
+        id: cache-qt
+        with:
+          path: |
+            ${{ env.LibrariesPath }}\[qQ]t[_-]*
+            ${{ env.LibrariesPath }}\cache_keys\[qQ]t[_-]*
+          key: ${{ runner.os }}-win64-qt-
+
+      - name: Clone source with submodules.
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.SOURCE_REPO }}
+          ref: ${{ env.SOURCE_REF }}
+          submodules: recursive
+          path: ${{ env.REPO_NAME }}
+
+      - name: Native Tools Command Prompt.
+        uses: Eden-CI/msvc-dev-cmd@master
+        with:
+          arch: x64
+          sdk: ${{ env.SDK }}
+          toolset: 14.44
+
+      - name: NuGet sources.
+        run: |
+          nuget sources Disable -Name "Microsoft Visual Studio Offline Packages"
+          nuget sources Add -Source https://api.nuget.org/v3/index.json & exit 0
+
+      - name: Libraries.
+        run: |
+          dir "%TBUILD%" >nul
+          %TBUILD%\AyuGramDesktop\Telegram\build\prepare\win.bat skip-release silent
+
+      - name: Telegram Desktop build.
+        run: |
+          cd %TBUILD%\AyuGramDesktop\Telegram
+          if "%BUILD_TYPE%"=="debug" (
+            call configure.bat -D CMAKE_CONFIGURATION_TYPES=Debug -D CMAKE_CXX_FLAGS_DEBUG="-O0" -D TDESKTOP_API_ID=611335 -D TDESKTOP_API_HASH=d524b414d21f4d37f08684c1df41ac9c
+          ) else (
+            call configure.bat -D DESKTOP_APP_DISABLE_AUTOUPDATE=ON -D TDESKTOP_API_ID=611335 -D TDESKTOP_API_HASH=d524b414d21f4d37f08684c1df41ac9c
+          )
+          cmake --build ..\out --config Release --parallel
+
+      - name: Move artifact.
+        shell: bash
+        run: |
+          OUT="$TBUILD/AyuGramDesktop/out/Release"
+          mkdir -p "$TBUILD/artifact"
+          cp "$OUT/Telegram.exe" "$TBUILD/artifact/AyuGram.exe" || cp "$OUT/AyuGram.exe" "$TBUILD/artifact/AyuGram.exe"
+          cp "$OUT/Updater.exe" "$TBUILD/artifact/Updater.exe" || true
+          cp "$OUT/Telegram.pdb" "$TBUILD/artifact/AyuGram.pdb" || true
+
+      - name: Zip artifact.
+        shell: bash
+        run: |
+          cd "$TBUILD/artifact"
+          7z a -tzip "$GITHUB_WORKSPACE/AyuGram-windows-x64.zip" .
+
+      - uses: actions/upload-artifact@v4
+        name: Upload artifact
+        with:
+          name: ayugram-windows-x64
+          path: AyuGram-windows-x64.zip
+
+      - name: Upload to GitHub release.
+        shell: bash
+        run: |
+          gh release upload ayugram-v7.0.4 "$GITHUB_WORKSPACE/AyuGram-windows-x64.zip" --repo ${{ github.repository }} --clobber
