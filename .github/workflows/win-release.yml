@@ -84,7 +84,7 @@ jobs:
           repository: ${{ env.SOURCE_REPO }}
           ref: ${{ env.SOURCE_REF }}
           submodules: recursive
-          path: ${{ env.REPO_NAME }}
+          path: ${{ env.TBUILD }}/${{ env.REPO_NAME }}
 
       - name: Get SDK version.
         shell: bash
